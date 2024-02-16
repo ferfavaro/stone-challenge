@@ -11,9 +11,11 @@ interface IProps {
 interface CurrencyInfoContextData {
   date: string;
   valueToReal: React.MutableRefObject<string | null>;
-  stateTax: React.MutableRefObject<string | null>;
+  stateTax: React.MutableRefObject<string>;
   federalTaxCash: number;
   federalTaxCard: number;
+  dollarExchangeRate: string;
+  paymentMethod: React.MutableRefObject<string>;
 }
 
 const CurrencyInfoContext = createContext<CurrencyInfoContextData>({} as CurrencyInfoContextData);
@@ -21,13 +23,17 @@ const CurrencyInfoContext = createContext<CurrencyInfoContextData>({} as Currenc
 export default function CurrencyInfoProvider({ children }: IProps) {
   const [date, setDate] = useState("")
   const valueToReal = useRef<string | null>("");
-  const stateTax = useRef<string | null>(null);
+  const stateTax = useRef<string>("");
+  const [dollarExchangeRate, setDollarExchangeRate] = useState("");
+  const paymentMethod = useRef<string>("");
   const [federalTaxCash, setFederalTaxCash] = useState(0)
   const [federalTaxCard, setFederalTaxCard] = useState(0)
 
-  function calcFees(conversionTax: number) {
-    setFederalTaxCash(conversionTax + (conversionTax * 0.011));
-    setFederalTaxCard(conversionTax + (conversionTax * 0.064));
+  function calcFees(conversionTax: string) {
+    const conversionTaxNumber = parseFloat(conversionTax)
+    setDollarExchangeRate(conversionTaxNumber.toFixed(2))
+    setFederalTaxCash(conversionTaxNumber + (conversionTaxNumber * 0.011));
+    setFederalTaxCard(conversionTaxNumber + (conversionTaxNumber * 0.064));
   }
 
   useEffect(() => {
@@ -51,7 +57,7 @@ export default function CurrencyInfoProvider({ children }: IProps) {
   }, []);
 
   return (
-    <CurrencyInfoContext.Provider value={{ date, valueToReal, stateTax, federalTaxCash, federalTaxCard}}>
+    <CurrencyInfoContext.Provider value={{ date, valueToReal, stateTax, federalTaxCash, federalTaxCard, paymentMethod, dollarExchangeRate}}>
       {children}
     </CurrencyInfoContext.Provider>
   )

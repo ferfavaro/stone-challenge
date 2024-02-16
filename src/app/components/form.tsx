@@ -10,8 +10,8 @@ export function Form() {
   const router = useRouter();
   const [dollarValue, setDollarValue] = useState("");
   const [stateTaxValue, setstateTaxValue] = useState("");
-  const { stateTax, valueToReal, federalTaxCard, federalTaxCash } = useCurrencyInfo();
-  const [isCash, setIsCash] = useState(true);
+  const { stateTax, valueToReal, federalTaxCard, federalTaxCash, paymentMethod } = useCurrencyInfo();
+  const [paymentMethodValue, setPaymentMethodValue] = useState("cash");
 
   function handleDollarValueChange(event: ChangeEvent<HTMLInputElement>) {
     setDollarValue(event.target.value)
@@ -21,31 +21,45 @@ export function Form() {
     setstateTaxValue(event.target.value)
   }
 
-  function handleConverter(event: FormEvent) {
+  function handleConverter() {
     calcValue();
-    console.log("passou")
+    stateTax.current = (stateTaxValue)
     router.push("/screens/conversionResult");
   }
+
+  const handlePaymentMethodChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setPaymentMethodValue(event.target.value);
+  };
 
   function calcValue() {
     const dollarValueNumber  = parseFloat(dollarValue.replace("$", ""))
     const percentageStateTax = (parseFloat(stateTaxValue.replace("%", "")) / 100);
     const percentageStateTaxValue = dollarValueNumber * percentageStateTax;
-    if (isCash) {
+    if (paymentMethodValue === "cash") {
+      paymentMethod.current = "dinheiro";
       const totalValue = ((dollarValueNumber + percentageStateTaxValue) * federalTaxCash);
-      console.log(federalTaxCash)
-      valueToReal.current = totalValue.toString();
+      if (isNaN(totalValue)) {
+        valueToReal.current = "0.00";
+        return;
+      }
+
+      valueToReal.current = totalValue.toFixed(2);
       return;
     }
+    paymentMethod.current = "cartão";
     const totalValue = ((dollarValueNumber + percentageStateTaxValue) * federalTaxCard);
-      valueToReal.current = totalValue.toString();
+    if (isNaN(totalValue)) {
+      valueToReal.current = "0.00";
+      return;
+    }
+      valueToReal.current = totalValue.toFixed(2);
     return;
   }
 
   return (
     <>
-      <form action="">
-        <div className="flex flex-row gap-6">
+      <form className="md:justify-normal md:items-start items-center justify-center flex flex-col" action="">
+        <div className="flex md:justify-normal md:items-start justify-center items-center flex-col lg:flex-row md:flex-row gap-6">
           <div className="flex flex-col">
             <Label.Root className="text-black font-medium mb-1">Dólar</Label.Root>
             <CurrencyInput
@@ -73,7 +87,7 @@ export function Form() {
             />
           </div>
         </div>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col md:items-start items-center">
           <Label.Root className="text-black font-medium">
             Tipo de compra
           </Label.Root>
@@ -81,6 +95,7 @@ export function Form() {
             className="flex flex-row mt-4 gap-6"
             aria-label="View density"
             defaultValue="cash"
+            onChange={handlePaymentMethodChange}
           >
             <div className="flex items-center">
               <RadioGroup.Item
@@ -90,7 +105,7 @@ export function Form() {
               >
                 <RadioGroup.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[14px] after:h-[14px] after:rounded-[100%] after:bg-green-600" />
               </RadioGroup.Item>
-              <label className="text-black font-medium text-[15px] leading-none pl-[15px]">
+              <label className="text-black font-normal text-[15px] leading-none pl-[15px]">
                 Dinheiro
               </label>
             </div>
@@ -102,7 +117,7 @@ export function Form() {
               >
                 <RadioGroup.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[14px] after:h-[14px] after:rounded-[100%] after:bg-green-600" />
               </RadioGroup.Item>
-              <label className="text-black font-medium text-[15px] leading-none pl-[15px]">
+              <label className="text-black font-normal text-[15px] leading-none pl-[15px]">
                 Cartão
               </label>
             </div>
@@ -111,9 +126,9 @@ export function Form() {
         <button
           onClick={handleConverter}
           type="button"
-          className="flex flex-row justify-center mt-8 gap-4 items-center w-[149px] text-base h-[56px] bg-green-500 p-4 rounded-lg"
+          className="flex flex-row justify-center mt-8 gap-4 items-center w-[149px] text-base font-medium h-[56px] bg-green-500 p-4 rounded-lg"
         >
-          <img src="converter.svg" alt="" />
+          <img src="/converter.svg" alt="" />
           Converter
         </button>
       </form>
